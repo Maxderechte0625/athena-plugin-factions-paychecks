@@ -1,11 +1,11 @@
 import * as alt from 'alt-server';
-import * as Athena from '@AthenaServer/api';
-import { CurrencyTypes } from '../../../../shared/enums/currency';
-import { FactionFuncs } from '../../../athena-plugin-factions/server/src/funcs';
-import { FactionHandler } from '../../../athena-plugin-factions/server/src/handler';
-import { FactionPlayerFuncs } from '../../../athena-plugin-factions/server/src/playerFuncs';
-import { F_PAYCHECK_EVENTS } from '../../shared/events';
-import { FactionCharacter, FactionRank } from '../../shared/extensions';
+import * as Athena from '@AthenaServer/api/index.js';
+import { CurrencyTypes } from '@AthenaShared/enums/currency.js';
+import { FactionFuncs } from '@AthenaPlugins/athena-plugin-factions/server/src/funcs.js';
+import { FactionHandler } from '@AthenaPlugins/athena-plugin-factions/server/src/handler.js';
+import { FactionPlayerFuncs } from '@AthenaPlugins/athena-plugin-factions/server/src/playerFuncs.js';
+import { F_PAYCHECK_EVENTS } from '@AthenaPlugins/athena-plugin-factions-paychecks/shared/events.js';
+import { FactionCharacter, FactionRank } from '@AthenaPlugins/athena-plugin-factions-paychecks/shared/extensions.js';
 
 const DEFAULT_HIGH_VALUE = Number.MAX_SAFE_INTEGER;
 
@@ -37,7 +37,7 @@ class InternalFunctions {
             return false;
         }
 
-        const member = faction.members[playerData._id.toString()] as FactionCharacter;
+        const member = faction.members[playerData.character_id.toString()] as FactionCharacter;
         if (!member) {
             alt.emitClient(player, F_PAYCHECK_EVENTS.GET_PAYCHECK_TIME_LEFT, DEFAULT_HIGH_VALUE);
             return false;
@@ -77,7 +77,7 @@ class InternalFunctions {
         }
 
         faction.ranks[rankIndex].paycheck = value;
-        const didUpdate = await FactionHandler.update(faction._id as string, { ranks: faction.ranks });
+        const didUpdate = await FactionHandler.update(faction.character_id as string, { ranks: faction.ranks });
         if (didUpdate.status) {
             FactionFuncs.updateMembers(faction);
         }
@@ -101,7 +101,7 @@ class InternalFunctions {
         }
 
         faction.settings.paycheckClaimTime = value;
-        const didUpdate = await FactionHandler.update(faction._id as string, { settings: faction.settings });
+        const didUpdate = await FactionHandler.update(faction.character_id as string, { settings: faction.settings });
         if (didUpdate.status) {
             FactionFuncs.updateMembers(faction);
             Athena.player.emit.soundFrontend(player, 'Hack_Success', 'DLC_HEIST_BIOLAB_PREP_HACKING_SOUNDS');
@@ -125,7 +125,7 @@ class InternalFunctions {
             return false;
         }
 
-        const member = faction.members[playerData._id.toString()] as FactionCharacter;
+        const member = faction.members[playerData.character_id.toString()] as FactionCharacter;
         if (!member) {
             return false;
         }
@@ -145,10 +145,10 @@ class InternalFunctions {
         }
 
         faction.bank -= rank.paycheck;
-        faction.members[playerData._id.toString()].nextPaycheck =
+        faction.members[playerData.character_id.toString()].nextPaycheck =
             Date.now() + faction.settings.paycheckClaimTime * 60000;
 
-        const didUpdate = await FactionHandler.update(faction._id as string, {
+        const didUpdate = await FactionHandler.update(faction.character_id as string, {
             members: faction.members,
             bank: faction.bank,
         });
